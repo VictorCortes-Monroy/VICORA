@@ -11,7 +11,12 @@ app = FastAPI(title="VICORA Backend")
 
 @app.get("/")
 async def root():
-    return {"message": "VICORA WhatsApp Chatbot API", "status": "running"}
+    return {
+        "message": "VICORA WhatsApp Chatbot API", 
+        "status": "running",
+        "version": "1.0.0",
+        "health": "ok"
+    }
 
 @app.get("/health")
 async def health():

@@ -15,7 +15,16 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "vicora-backend"}
+    return {
+        "status": "healthy", 
+        "service": "vicora-backend",
+        "version": "1.0.0",
+        "timestamp": "2024-01-01T00:00:00Z"
+    }
+
+@app.get("/ready")
+async def ready():
+    return {"status": "ready", "message": "Application is ready to receive requests"}
 
 # Importar routers solo si las variables de entorno están disponibles
 try:

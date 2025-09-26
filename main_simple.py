@@ -168,6 +168,7 @@ async def receive_webhook(request: Request):
                             
                             # Crear/actualizar contacto
                             contact_data = {
+                                "clinic_id": "clinic-test-001",  # ID genérico para pruebas
                                 "phone": from_number,
                                 "full_name": contacts[0]["profile"]["name"] if contacts else f"Usuario {from_number}"
                             }
@@ -185,6 +186,7 @@ async def receive_webhook(request: Request):
                             
                             # Crear/actualizar conversación
                             conversation_data = {
+                                "clinic_id": "clinic-test-001",  # ID genérico para pruebas
                                 "contact_id": contact["id"],
                                 "channel": "whatsapp",
                                 "status": "open"
@@ -202,6 +204,7 @@ async def receive_webhook(request: Request):
                             
                             # Guardar mensaje
                             message_data = {
+                                "clinic_id": "clinic-test-001",  # ID genérico para pruebas
                                 "conversation_id": conversation["id"],
                                 "contact_id": contact["id"],
                                 "direction": "inbound",
@@ -219,6 +222,7 @@ async def receive_webhook(request: Request):
                             
                             # Guardar respuesta
                             response_data = {
+                                "clinic_id": "clinic-test-001",  # ID genérico para pruebas
                                 "conversation_id": conversation["id"],
                                 "contact_id": contact["id"],
                                 "direction": "outbound",

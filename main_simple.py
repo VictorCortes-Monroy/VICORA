@@ -169,8 +169,7 @@ async def receive_webhook(request: Request):
                             # Crear/actualizar contacto
                             contact_data = {
                                 "phone": from_number,
-                                "full_name": contacts[0]["profile"]["name"] if contacts else f"Usuario {from_number}",
-                                "source": "whatsapp"
+                                "full_name": contacts[0]["profile"]["name"] if contacts else f"Usuario {from_number}"
                             }
                             
                             # Buscar contacto existente

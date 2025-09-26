@@ -1,6 +1,6 @@
 # main_simple.py - Versión ultra simple para Railway
 import os
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Query
 
 app = FastAPI(title="VICORA Backend")
 
@@ -25,12 +25,12 @@ async def test():
 # Webhook de WhatsApp
 @app.get("/webhooks/whatsapp")
 async def verify_webhook(
-    hub_mode: str = None, 
-    hub_challenge: str = None, 
-    hub_verify_token: str = None,
-    mode: str = None, 
-    challenge: str = None, 
-    token: str = None
+    hub_mode: str = Query(None, alias="hub.mode"),
+    hub_challenge: str = Query(None, alias="hub.challenge"), 
+    hub_verify_token: str = Query(None, alias="hub.verify_token"),
+    mode: str = Query(None),
+    challenge: str = Query(None),
+    token: str = Query(None)
 ):
     """Verificación del webhook de WhatsApp"""
     verify_token = os.environ.get("WHATSAPP_VERIFY_TOKEN", "mi-token-secreto-vicora-2024")

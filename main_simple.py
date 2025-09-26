@@ -136,9 +136,109 @@ async def receive_webhook(request: Request):
         body = await request.json()
         print(f"📱 Mensaje recibido: {body}")
         
-        # Aquí procesarías el mensaje de WhatsApp
-        # Por ahora solo devolvemos OK
-        return {"status": "received", "message": "Mensaje procesado"}
+        # Procesar el mensaje de WhatsApp
+        entries = body.get("entry", [])
+        
+        for entry in entries:
+            changes = entry.get("changes", [])
+            for change in changes:
+                value = change.get("value", {})
+                messages = value.get("messages", [])
+                contacts = value.get("contacts", [])
+                
+                for message in messages:
+                    if message.get("type") != "text":
+                        continue
+                        
+                    text = message["text"]["body"]
+                    from_number = message["from"]
+                    message_id = message["id"]
+                    
+                    print(f"📝 Procesando mensaje: {text} de {from_number}")
+                    
+                    # Guardar en Supabase
+                    try:
+                        from supabase import create_client, Client
+                        
+                        supabase_url = os.environ.get("SUPABASE_URL")
+                        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+                        
+                        if supabase_url and supabase_key:
+                            supabase: Client = create_client(supabase_url, supabase_key)
+                            
+                            # Crear/actualizar contacto
+                            contact_data = {
+                                "phone": from_number,
+                                "full_name": contacts[0]["profile"]["name"] if contacts else f"Usuario {from_number}",
+                                "source": "whatsapp"
+                            }
+                            
+                            # Buscar contacto existente
+                            existing_contact = supabase.table("contacts").select("*").eq("phone", from_number).execute()
+                            
+                            if existing_contact.data:
+                                contact = existing_contact.data[0]
+                                print(f"👤 Contacto existente: {contact['full_name']}")
+                            else:
+                                # Crear nuevo contacto
+                                contact = supabase.table("contacts").insert(contact_data).execute().data[0]
+                                print(f"👤 Nuevo contacto creado: {contact['full_name']}")
+                            
+                            # Crear/actualizar conversación
+                            conversation_data = {
+                                "contact_id": contact["id"],
+                                "channel": "whatsapp",
+                                "status": "open"
+                            }
+                            
+                            existing_conversation = supabase.table("conversations").select("*").eq("contact_id", contact["id"]).eq("channel", "whatsapp").eq("status", "open").execute()
+                            
+                            if existing_conversation.data:
+                                conversation = existing_conversation.data[0]
+                                print(f"💬 Conversación existente: {conversation['id']}")
+                            else:
+                                # Crear nueva conversación
+                                conversation = supabase.table("conversations").insert(conversation_data).execute().data[0]
+                                print(f"💬 Nueva conversación creada: {conversation['id']}")
+                            
+                            # Guardar mensaje
+                            message_data = {
+                                "conversation_id": conversation["id"],
+                                "contact_id": contact["id"],
+                                "direction": "inbound",
+                                "channel": "whatsapp",
+                                "content": text,
+                                "external_message_id": message_id,
+                                "status": "delivered"
+                            }
+                            
+                            saved_message = supabase.table("messages").insert(message_data).execute().data[0]
+                            print(f"💾 Mensaje guardado: {saved_message['id']}")
+                            
+                            # Responder automáticamente
+                            response_text = f"Hola {contact['full_name']}! Recibí tu mensaje: '{text}'. ¿En qué puedo ayudarte?"
+                            
+                            # Guardar respuesta
+                            response_data = {
+                                "conversation_id": conversation["id"],
+                                "contact_id": contact["id"],
+                                "direction": "outbound",
+                                "channel": "whatsapp",
+                                "content": response_text,
+                                "status": "sent"
+                            }
+                            
+                            supabase.table("messages").insert(response_data).execute()
+                            print(f"📤 Respuesta enviada: {response_text}")
+                            
+                        else:
+                            print("❌ Variables de Supabase no configuradas")
+                            
+                    except Exception as e:
+                        print(f"❌ Error guardando en Supabase: {e}")
+        
+        return {"status": "received", "message": "Mensaje procesado y guardado"}
+        
     except Exception as e:
         print(f"❌ Error procesando webhook: {e}")
         return {"status": "error", "message": str(e)}

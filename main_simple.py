@@ -61,6 +61,43 @@ async def test_supabase():
             "supabase_key": bool(os.environ.get("SUPABASE_SERVICE_ROLE_KEY"))
         }
 
+@app.get("/data")
+async def get_data():
+    """Endpoint para ver los datos guardados en Supabase"""
+    try:
+        from supabase import create_client, Client
+        
+        supabase_url = os.environ.get("SUPABASE_URL")
+        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        
+        if not supabase_url or not supabase_key:
+            return {"error": "Variables de Supabase no configuradas"}
+        
+        supabase: Client = create_client(supabase_url, supabase_key)
+        
+        # Obtener contactos
+        contacts = supabase.table("contacts").select("*").execute()
+        
+        # Obtener conversaciones
+        conversations = supabase.table("conversations").select("*").execute()
+        
+        # Obtener mensajes
+        messages = supabase.table("messages").select("*").order("created_at", desc=True).limit(10).execute()
+        
+        return {
+            "contacts": contacts.data,
+            "conversations": conversations.data,
+            "messages": messages.data,
+            "counts": {
+                "contacts": len(contacts.data),
+                "conversations": len(conversations.data),
+                "messages": len(messages.data)
+            }
+        }
+        
+    except Exception as e:
+        return {"error": f"Error obteniendo datos: {str(e)}"}
+
 # Webhook de WhatsApp
 @app.get("/webhooks/whatsapp")
 async def verify_webhook(

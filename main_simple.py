@@ -22,6 +22,45 @@ async def test():
         "verify_token": os.environ.get("WHATSAPP_VERIFY_TOKEN", "mi-token-secreto-vicora-2024")
     }
 
+@app.get("/test-supabase")
+async def test_supabase():
+    """Endpoint para probar la conexión con Supabase"""
+    try:
+        from supabase import create_client, Client
+        
+        supabase_url = os.environ.get("SUPABASE_URL")
+        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        
+        if not supabase_url or not supabase_key:
+            return {
+                "status": "error",
+                "message": "Variables de Supabase no configuradas",
+                "supabase_url": bool(supabase_url),
+                "supabase_key": bool(supabase_key)
+            }
+        
+        # Probar conexión
+        supabase: Client = create_client(supabase_url, supabase_key)
+        
+        # Probar consulta simple
+        result = supabase.table("contacts").select("*").limit(1).execute()
+        
+        return {
+            "status": "success",
+            "message": "Conexión con Supabase exitosa",
+            "supabase_url": supabase_url,
+            "contacts_count": len(result.data),
+            "first_contact": result.data[0] if result.data else None
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error conectando con Supabase: {str(e)}",
+            "supabase_url": os.environ.get("SUPABASE_URL"),
+            "supabase_key": bool(os.environ.get("SUPABASE_SERVICE_ROLE_KEY"))
+        }
+
 # Webhook de WhatsApp
 @app.get("/webhooks/whatsapp")
 async def verify_webhook(

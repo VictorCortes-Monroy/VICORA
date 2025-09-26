@@ -75,6 +75,9 @@ async def get_data():
         
         supabase: Client = create_client(supabase_url, supabase_key)
         
+        # Obtener clínicas
+        clinics = supabase.table("clinics").select("*").execute()
+        
         # Obtener contactos
         contacts = supabase.table("contacts").select("*").execute()
         
@@ -85,10 +88,12 @@ async def get_data():
         messages = supabase.table("messages").select("*").order("created_at", desc=True).limit(10).execute()
         
         return {
+            "clinics": clinics.data,
             "contacts": contacts.data,
             "conversations": conversations.data,
             "messages": messages.data,
             "counts": {
+                "clinics": len(clinics.data),
                 "contacts": len(contacts.data),
                 "conversations": len(conversations.data),
                 "messages": len(messages.data)

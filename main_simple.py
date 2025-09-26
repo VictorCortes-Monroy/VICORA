@@ -24,19 +24,33 @@ async def test():
 
 # Webhook de WhatsApp
 @app.get("/webhooks/whatsapp")
-async def verify_webhook(mode: str = None, challenge: str = None, token: str = None):
+async def verify_webhook(
+    hub_mode: str = None, 
+    hub_challenge: str = None, 
+    hub_verify_token: str = None,
+    mode: str = None, 
+    challenge: str = None, 
+    token: str = None
+):
     """Verificación del webhook de WhatsApp"""
     verify_token = os.environ.get("WHATSAPP_VERIFY_TOKEN", "mi-token-secreto-vicora-2024")
     
+    # Usar parámetros con prefijo hub. si están disponibles, sino usar los normales
+    actual_mode = hub_mode or mode
+    actual_challenge = hub_challenge or challenge
+    actual_token = hub_verify_token or token
+    
     # Debug logs
+    print(f"🔍 DEBUG: hub_mode={hub_mode}, hub_challenge={hub_challenge}, hub_verify_token={hub_verify_token}")
     print(f"🔍 DEBUG: mode={mode}, challenge={challenge}, token={token}")
+    print(f"🔍 DEBUG: actual_mode={actual_mode}, actual_challenge={actual_challenge}, actual_token={actual_token}")
     print(f"🔍 DEBUG: verify_token={verify_token}")
     
-    if mode == "subscribe" and token == verify_token:
-        print(f"✅ Verificación exitosa, devolviendo challenge: {challenge}")
-        return int(challenge)
+    if actual_mode == "subscribe" and actual_token == verify_token:
+        print(f"✅ Verificación exitosa, devolviendo challenge: {actual_challenge}")
+        return int(actual_challenge)
     
-    print(f"❌ Verificación fallida: mode={mode}, token={token}")
+    print(f"❌ Verificación fallida: actual_mode={actual_mode}, actual_token={actual_token}")
     raise HTTPException(status_code=403, detail="Forbidden")
 
 @app.post("/webhooks/whatsapp")
